@@ -38,6 +38,9 @@ class TLDetector(object):
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
 
+        stop_line_positions = self.config['stop_line_positions']
+
+
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
@@ -101,7 +104,9 @@ class TLDetector(object):
 
         """
         #TODO implement
-        return 0
+	# pose is list of length 2 e.g. [x, y]
+	closest_idx = self.waypoint_tree.query(pose, 1)[1]
+        return closest_idx
 
     def get_light_state(self, light):
         """Determines the current color of the traffic light
@@ -132,13 +137,25 @@ class TLDetector(object):
 
         """
         light = None
+	light_wp = None
 
         # List of positions that correspond to the line to stop in front of for a given intersection
         stop_line_positions = self.config['stop_line_positions']
         if(self.pose):
-            car_position = self.get_closest_waypoint(self.pose.pose)
+            car_position = self.get_closest_waypoint([self.pose.pose.position.x,
+						      self.pose.pose.position.y])
 
         #TODO find the closest visible traffic light (if one exists)
+        diff = len(self.waypoints.waypoints)
+        for i, lite in enumerate(self.lights):
+            #
+            line = stop_line_positions[i]
+            temp_wp_idx = self.get_closest_waypoint([line[0], line[1]])
+            d = temp_wp_idx - car_position
+            if d >= 0 and d < diff:
+                diff = d
+                light = lite
+                light_wp = temp_wp_idx
 
         if light:
             state = self.get_light_state(light)
