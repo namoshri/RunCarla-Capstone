@@ -1,7 +1,14 @@
 from styx_msgs.msg import TrafficLight
 import tensorflow as tf
+import numpy as np
 import os
+import sys
+import tensorflow as tf
+from collections import defaultdict
+from io import StringIO
+from utils import label_map_util
 
+import time
 
 class TLClassifier(object):
     def __init__(self):
@@ -11,8 +18,14 @@ class TLClassifier(object):
 
 	CKPT = cwd+'/frozen_inference_graph.pb'
 
+        # As pretrained on bosch dataset with 14 classes
         PATH_TO_LABELS = cwd+'/label_map.pbtxt'
         NUM_CLASSES = 14
+
+        label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
+        categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
+        self.category_index = label_map_util.create_category_index(categories)
+
 
         self.image_np_deep = None
         self.detection_graph = tf.Graph()
@@ -120,19 +133,7 @@ class TLClassifier(object):
                     #print("perceived_width", perceived_width_x, perceived_width_y)
                     #print("perceived_depth", perceived_depth_x, perceived_depth_y)
                     #print("Average depth (ft?)", estimated_distance)
-
-
-            # Visualization of the results of a detection.
-            vis_util.visualize_boxes_and_labels_on_image_array(
-                image, boxes, classes, scores,
-                self.category_index,
-                use_normalized_coordinates=True,
-                line_thickness=8)
             
         
-        # For visualization topic output
-        self.image_np_deep = image
-
-       
         return self.current_light
 
