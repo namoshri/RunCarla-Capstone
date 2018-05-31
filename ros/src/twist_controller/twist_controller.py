@@ -76,7 +76,7 @@ class Controller(object):
                 # Compute brake torque, in Nm
                 brake = self.acceleration_to_tq(decel)
 
-        return throttle, brake, steer
+        return throttle, brake, steering
 
     def acceleration_to_tq(self, acceleration):
         """
