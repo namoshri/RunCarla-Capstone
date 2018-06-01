@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import rospy
+from std_msgs.msg import Int8
 from std_msgs.msg import Int32
 from geometry_msgs.msg import PoseStamped, Pose
 from styx_msgs.msg import TrafficLightArray, TrafficLight
@@ -10,6 +11,9 @@ from light_classification.tl_classifier import TLClassifier
 import tf
 import cv2
 import yaml
+
+from darknet_ros_msgs.msg import BoundingBox
+from darknet_ros_msgs.msg import BoundingBoxes
 
 STATE_COUNT_THRESHOLD = 3
 
@@ -35,6 +39,10 @@ class TLDetector(object):
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
         sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
 
+	sub7 = rospy.Subscriber('/darknet_ros/found_object', Int8, self.num_obj_found_cb)
+	sub8 = rospy.Subscriber('/darknet_ros/detection_image', Image, self.detected_image_cb)
+	sub9 = rospy.Subscriber('/darknet_ros/bounding_boxes', BoundingBoxes, self.detected_bb_cb)
+
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
 
@@ -50,6 +58,17 @@ class TLDetector(object):
         self.state_count = 0
 
         rospy.spin()
+
+    def num_obj_found_cb(self, num):
+	self.num_obj_detected = num
+	print "num obj found = ", self.num_obj_detected
+
+    def detected_image_cb(self, img):
+	self.detected_image = img
+
+    def detected_bb_cb(self, bb):
+	self.detected_bb = bb
+	print "detected bb = ", bb
 
     def pose_cb(self, msg):
         self.pose = msg
