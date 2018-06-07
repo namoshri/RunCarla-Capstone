@@ -1,4 +1,4 @@
-# RunCarla - Udacity Self-Driving Car Capstone
+# Run Carla - Udacity Self-Driving Car Capstone
 
 This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction.
 
@@ -127,19 +127,40 @@ where
 ### Traffic Light Detection Node
 Traffic Light detection subscribes to the /image_color and /darknet_ros/bounding_boxes topic. When it receives an image in /image_color it processes the image via the callback function TL_Detector::image_cb.
 
-It finds the closest traffic waypoint and if a traffic lights are detected, it determines the signal state of the traffic light using the class TL_Classifier.
+For the simulator since we had the waypoints we could use the waypoints to determine the relative position of the traffic light to the car and only process the closest traffic light.
 
 
-With the identified traffic light bounding boxes, the TL_Detector crops the image with the bounding boxes and sends the cropped image to TL_Classifier to determine the color state of the traffic light.
+Under real world driving, we don't have waypoints; We only have the images.
+However, from the YOLOv3 object detector, we receive bounding boxes around the detected traffic light which gives a way to calibrate roughly the distance to the traffic light. Using the simulator, we empirically determined, by driving manually, that when the traffic light bounding boxes had a high probability and a bounding box with a diagonal greater than 85 pixels, that was a good indicator of when we had to process and act on the TL state and stop the car successfully.
 
-The postion and state of the traffic, TL_Detector  publishes this in the /traffic_waypoint topic to be consumbed by the Waypoint Node. 
+So, the bounding boxes from an image were not processed until we reach these criteria when running on site. The processing continued with traffic light state identification.
+
 
 ### TL_Classifier: Classification of traffic light state
 
-TL_Classifier uses two ways to determine the TL state, 1) by color and 2) by position.
+Initially, based on the the simulator images, we classifed the traffic light state by filtering for red, yellow and green colors after converting to the HSV colorspace. 
 
-We use the computer vision library, OpenCV2, filter the image for red, yellow and green color pixels. The image is converted from BGF into HSV color system where it is easy to define a colorfilter.
+While this worked well for the simulator, the classifier worked poorly for the real-world images provided in the rosbag with images captured from the Carla. In the real-world images, the color didn't show well in the video; the video capture mostly the intensity.
 
+The classifiered was updated to use two features of the traffic light to determine the TL state, color of the signal and the relative positions of the signal within the image.
 
-For position, we divide the image into three areas and find the brightness image pixels in the 3 region. The region with the largest number of bright pixels determines the state. The top region is assigned red, the middle, yellow and the bottom, green.
+We first divided the cropped image along the long axis of the detected image into three equal regions. We expect 
+1. red area: the top one-third where we expect the most red pixels 
+2. yellow area: the middle third where we expect the most yellow pixels
+3. green area: the last third where we expect the most green pixels
+
+This worked okay for the site images, but not for the simulator images. To attain a single classifier, we used color boosting to arrive at a classifier that can handle both types of images.
+
+The image color was boosted differentially based on the expected color area.
+
+We used cv2.transform to boost red channel of the red area; the yellow channel was boosted in the yellow area, and the green channel was boosted in the green area.
+
+the 3 channels were combined to obtain a grayscale image. 
+
+We the applied a grayscale threshold of pixels with intensities between 210 and 255 and then classified as follows;
+
+1. Red if the red area count was greater than the yellow and green area counts.
+2. Yellow if the yellow area count was greater than the red or green area counts
+3. Green if green counts greater than red and yellow counts.
+
 
