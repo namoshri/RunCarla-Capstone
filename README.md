@@ -163,4 +163,9 @@ We the applied a grayscale threshold of pixels with intensities between 210 and 
 2. Yellow if the yellow area count was greater than the red or green area counts
 3. Green if green counts greater than red and yellow counts.
 
+Below are examples from the site:
 
+![alt text](./imgs/site1_red.png)
+
+
+![alt text](./imgs/site1_green.png)
