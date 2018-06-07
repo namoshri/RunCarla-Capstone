@@ -1,4 +1,4 @@
-# Run Carla - Udacity Self-Driving Car Capstone
+# RunCarla - Udacity Self-Driving Car Capstone
 
 This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction.
 
