@@ -5,7 +5,7 @@ import rospy
 GAS_DENSITY = 2.858
 ONE_MPH = 0.44704
 
-...
+'''
 
 This file defines the Controller class that performs the calculations to get the throttle, steering and brake inputs.
 
@@ -19,7 +19,7 @@ The brake torque is calculated based on the velocity error and throttle values. 
 
 It returns the calculated values only if the dbw module is enabled, else it returns a 0 value for all commands.
 
-...
+'''
 
 
 class Controller(object):
